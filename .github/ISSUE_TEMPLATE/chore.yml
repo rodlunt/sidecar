@@ -1,0 +1,17 @@
+name: Chore / ops / docs
+description: Housekeeping, dependency bump, docs, CI/CD, or anything else that isn't a bug or feature
+labels: [chore]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What and why
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Two or three testable criteria, where that makes sense for this kind of change.
+    validations:
+      required: false

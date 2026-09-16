@@ -1,0 +1,31 @@
+name: Feature request
+description: New capability or a change to existing behaviour
+labels: [enhancement]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What and why
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Two or three testable criteria. Done means these pass, not "finished typing".
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone / phase (optional)
+      description: e.g. MVP, Phase 2 (chat), Phase 3 (Claude Code/Codex integration)
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        If this is epic-sized, split it into person-week-sized issues before work starts.
