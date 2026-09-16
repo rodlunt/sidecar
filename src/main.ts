@@ -3,8 +3,22 @@ import { listen } from "@tauri-apps/api/event";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+import { FileTree } from "./file-tree";
 
 const container = document.getElementById("terminal")!;
+
+const fileTree = new FileTree(
+  document.getElementById("file-tree")!,
+  document.getElementById("root-label")!,
+);
+
+document.getElementById("open-folder-btn")!.addEventListener("click", async () => {
+  const { open } = await import("@tauri-apps/plugin-dialog");
+  const picked = await open({ directory: true });
+  if (typeof picked === "string") {
+    await fileTree.open(picked);
+  }
+});
 
 const term = new Terminal({
   cursorBlink: true,
