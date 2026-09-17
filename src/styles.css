@@ -70,6 +70,18 @@ body {
   font-size: 13px;
 }
 
+/* Browsers don't inherit font-family/font-size into form controls by
+   default (a long-standing UA stylesheet quirk), so every button in the
+   app was silently falling back to the system font instead of the
+   IBM Plex typeface above it. */
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
 #app {
   display: flex;
   height: 100vh;
