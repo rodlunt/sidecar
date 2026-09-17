@@ -1,7 +1,7 @@
 // Lane-assignment algorithm adapted from mhutchie/vscode-git-graph
 // (https://github.com/mhutchie/vscode-git-graph, web/graph.ts, MIT-style licence).
 // Trimmed to sidecar's needs: no stash/mute/expand-row/tooltip handling, and no
-// "null vertex" sentinel for missing parents — a vertex with an unresolved parent
+// "null vertex" sentinel for missing parents: a vertex with an unresolved parent
 // is flagged via `hasTruncatedParent` and rendered as an explicit gap, not a line
 // that trails off-graph implying unseen-but-real history.
 
