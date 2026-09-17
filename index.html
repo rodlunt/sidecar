@@ -15,17 +15,23 @@
           <span id="root-label">No folder open</span>
           <button id="open-folder-btn" title="Open folder">Open</button>
         </div>
-        <div id="sidebar-tabs">
-          <button class="sidebar-tab active" data-tab="files">Files</button>
-          <button class="sidebar-tab" data-tab="git">Git</button>
-          <button class="sidebar-tab" data-tab="issues">Issues</button>
+        <div id="sidebar-accordion">
+          <section class="accordion-item" data-panel="files">
+            <button class="accordion-header">Files</button>
+            <div id="file-tree" class="accordion-content"></div>
+          </section>
+          <section class="accordion-item" data-panel="git">
+            <button class="accordion-header">Git</button>
+            <div id="git-graph-panel" class="accordion-content">
+              <div id="git-graph-status"></div>
+              <div id="git-graph-container"></div>
+            </div>
+          </section>
+          <section class="accordion-item" data-panel="issues">
+            <button class="accordion-header">Issues</button>
+            <div id="issues-panel" class="accordion-content"></div>
+          </section>
         </div>
-        <div id="file-tree" class="sidebar-panel"></div>
-        <div id="git-graph-panel" class="sidebar-panel" hidden>
-          <div id="git-graph-status"></div>
-          <div id="git-graph-container"></div>
-        </div>
-        <div id="issues-panel" class="sidebar-panel" hidden></div>
       </aside>
       <main id="terminal"></main>
     </div>

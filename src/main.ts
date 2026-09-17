@@ -31,27 +31,52 @@ document.getElementById("open-folder-btn")!.addEventListener("click", async () =
   }
 });
 
-const tabButtons = document.querySelectorAll<HTMLButtonElement>(".sidebar-tab");
-const panels: Record<string, HTMLElement> = {
-  files: document.getElementById("file-tree")!,
-  git: document.getElementById("git-graph-panel")!,
-  issues: document.getElementById("issues-panel")!,
+const PANEL_IDS = ["files", "git", "issues"] as const;
+type PanelId = (typeof PANEL_IDS)[number];
+
+const accordion = document.getElementById("sidebar-accordion")!;
+const accordionItems: Record<PanelId, HTMLElement> = {
+  files: accordion.querySelector('[data-panel="files"]')!,
+  git: accordion.querySelector('[data-panel="git"]')!,
+  issues: accordion.querySelector('[data-panel="issues"]')!,
 };
 
-tabButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const tab = btn.dataset.tab!;
-    tabButtons.forEach((b) => b.classList.toggle("active", b === btn));
-    for (const [name, panel] of Object.entries(panels)) {
-      panel.hidden = name !== tab;
-    }
-    if (tab === "git") {
-      gitGraph.refresh();
-    } else if (tab === "issues") {
-      issuesPanel.refresh();
-    }
-  });
-});
+// Panels open independently (any subset can be visible together) and are
+// ordered by when they were opened: newly opened panels append to the
+// bottom of the open stack, closed panels fall back to their default order.
+let openOrder: PanelId[] = ["files"];
+
+function renderAccordion() {
+  const closedIds = PANEL_IDS.filter((id) => !openOrder.includes(id));
+  for (const id of [...openOrder, ...closedIds]) {
+    accordion.append(accordionItems[id]);
+  }
+  for (const id of PANEL_IDS) {
+    const isOpen = openOrder.includes(id);
+    const item = accordionItems[id];
+    item.classList.toggle("open", isOpen);
+    item.querySelector<HTMLElement>(".accordion-content")!.hidden = !isOpen;
+  }
+}
+
+function togglePanel(id: PanelId) {
+  if (openOrder.includes(id)) {
+    openOrder = openOrder.filter((p) => p !== id);
+  } else {
+    openOrder = [...openOrder, id];
+    if (id === "git") gitGraph.refresh();
+    if (id === "issues") issuesPanel.refresh();
+  }
+  renderAccordion();
+}
+
+for (const id of PANEL_IDS) {
+  accordionItems[id]
+    .querySelector(".accordion-header")!
+    .addEventListener("click", () => togglePanel(id));
+}
+
+renderAccordion();
 
 const term = new Terminal({
   cursorBlink: true,
