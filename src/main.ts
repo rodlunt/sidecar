@@ -4,6 +4,9 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { FileTree } from "./file-tree";
+import { GitGraph } from "./git-graph";
+import { IssuesPanel } from "./issues-panel";
+import { Accordion } from "./accordion";
 
 const container = document.getElementById("terminal")!;
 
@@ -12,21 +15,36 @@ const fileTree = new FileTree(
   document.getElementById("root-label")!,
 );
 
+const gitGraph = new GitGraph(
+  document.getElementById("git-graph-container")!,
+  document.getElementById("git-graph-status")!,
+);
+
+const issuesPanel = new IssuesPanel(document.getElementById("issues-panel")!);
+
 document.getElementById("open-folder-btn")!.addEventListener("click", async () => {
   const { open } = await import("@tauri-apps/plugin-dialog");
   const picked = await open({ directory: true });
   if (typeof picked === "string") {
     await fileTree.open(picked);
+    await gitGraph.open(picked);
+    await issuesPanel.open(picked);
   }
+});
+
+new Accordion(document.getElementById("sidebar-accordion")!, (id) => {
+  if (id === "git") gitGraph.refresh();
+  if (id === "issues") issuesPanel.refresh();
 });
 
 const term = new Terminal({
   cursorBlink: true,
-  fontFamily: "Menlo, Consolas, monospace",
+  fontFamily: "'IBM Plex Mono', Menlo, Consolas, monospace",
   fontSize: 14,
   theme: {
-    background: "#1e1e1e",
-    foreground: "#e0e0e0",
+    background: "#171a1f",
+    foreground: "#e2e4e8",
+    cursor: "#4a90d9",
   },
 });
 

@@ -26,6 +26,25 @@ portable-pty = "0.9.0"
 tokio = { version = "1.53.1", features = ["full"] }
 notify = "8.2.0"
 tauri-plugin-dialog = "2.7.3"
+git2 = "0.21.0"
+# default-features off to drop the "jwt-rust-crypto" feature: it pulls in
+# rsa 0.9.10, which has an unfixed timing-sidechannel advisory
+# (RUSTSEC-2023-0071). Sidecar only uses device-flow user auth, never GitHub
+# App JWT auth, so swap to the aws-lc-rs JWT backend instead (same octocrab
+# default feature set otherwise).
+octocrab = { version = "0.54.2", default-features = false, features = [
+    "follow-redirect",
+    "retry",
+    "rustls",
+    "timeout",
+    "tracing",
+    "default-client",
+    "rustls-ring",
+    "jwt-aws-lc-rs",
+] }
+keyring = "4.2.0"
+secrecy = "0.10.3"
+http = "1.0.0"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
