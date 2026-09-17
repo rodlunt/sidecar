@@ -10,9 +10,10 @@ pnpm install
 pnpm tauri dev
 ```
 
-Currently implemented: a single pty-backed terminal pane (xterm.js frontend, `portable-pty`
-Rust backend). File tree, commit graph, Issues panel and chat are not built yet. See
-`~/.claude/plans/golden-floating-rose.md` for the full plan.
+Implemented: a pty-backed terminal pane, a live-updating file tree, a git commit graph with
+inline PR labels, and a GitHub Issues panel (device-flow sign-in, keychain token storage).
+Sidebar sections are an independent, resizable, reorderable accordion. Chat (Phase 2) isn't
+built yet.
 
 ## Stack
 
@@ -21,6 +22,8 @@ Rust backend). File tree, commit graph, Issues panel and chat are not built yet.
 | Shell | [Tauri 2](https://tauri.app) (Rust core + web frontend) |
 | Frontend | TypeScript + Vite, [xterm.js](https://xtermjs.org) |
 | Terminal backend | [`portable-pty`](https://crates.io/crates/portable-pty) |
+| Git | [`git2`](https://crates.io/crates/git2) |
+| GitHub API | [`octocrab`](https://crates.io/crates/octocrab) (device-flow OAuth), [`keyring`](https://crates.io/crates/keyring) (OS keychain token storage) |
 | Package manager | pnpm (never npm) |
 
 ## Development setup
@@ -37,7 +40,15 @@ pnpm tauri dev
 
 ## Tests
 
-- `pnpm exec tsc --noEmit` — frontend type-check
-- `cd src-tauri && cargo check` — Rust backend compile check
+- `pnpm exec tsc --noEmit`: frontend type-check
+- `cd src-tauri && cargo check && cargo test`: Rust backend compile check and unit tests
 
-No automated test suite yet — this is pre-MVP scaffolding.
+Every command above is what CI runs (see `.github/workflows/ci.yml`), split into independent
+jobs so an audit failure never masks a lint or test failure.
+
+## Docs
+
+| Doc | What's in it |
+|---|---|
+| [`CLAUDE.md`](CLAUDE.md) | Stack summary, issue discipline, repo conventions |
+| [`SECURITY.md`](SECURITY.md) | How to report a security issue |

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question about installing or running sidecar
+    url: https://github.com/rodlunt/sidecar/discussions/categories/q-a
+    about: Ask in Q&A Discussions; questions filed as issues will be converted.
+  - name: Idea or feature request
+    url: https://github.com/rodlunt/sidecar/discussions/categories/ideas
+    about: Something you wish sidecar did, or a UI/workflow suggestion.
+  - name: Security problem
+    url: https://github.com/rodlunt/sidecar/security/advisories/new
+    about: Never report security issues publicly. This link opens a private advisory only the maintainer can see; SECURITY.md has the details and an email fallback.

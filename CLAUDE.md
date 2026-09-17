@@ -1,8 +1,7 @@
 # sidecar
 
-Lightweight desktop companion to a terminal: file tree, git graph, GitHub Issues, chat. Not a
-VS Code replacement. Full design plan: `~/.claude/plans/golden-floating-rose.md` (local to the
-machine that drafted it; ask Rodney if you need the content and don't have it).
+Lightweight desktop companion to a terminal: file tree, git graph, GitHub Issues. Not a VS Code
+replacement. Chat (a future phase) isn't built yet.
 
 ## Stack
 
@@ -18,4 +17,4 @@ before work starts.
 
 - Feature branch + PR for anything non-trivial; conventional commit prefixes; never squash-merge.
 - Australian English, no em or en dashes.
-- Never `npm` — `pnpm` only.
+- Never `npm`, `pnpm` only.
