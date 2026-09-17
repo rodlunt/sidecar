@@ -12,6 +12,8 @@ interface GraphCommit {
   parents: string[];
   truncated_parents: string[];
   refs: string[];
+  pr_number: number | null;
+  pr_title: string | null;
 }
 
 interface GraphData {
@@ -58,6 +60,7 @@ export class GitGraph {
     const info: RenderedCommitInfo[] = data.commits.map((c, i) => ({
       index: i,
       summary: c.summary,
+      label: c.pr_number !== null && c.pr_title !== null ? `#${c.pr_number} ${c.pr_title}` : c.summary,
       author: c.author,
       date: c.date,
       refs: c.refs,

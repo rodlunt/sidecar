@@ -7,8 +7,10 @@ const GRID_Y = 24;
 const OFFSET_X = 10;
 const OFFSET_Y = 12;
 const GAP_STUB_Y = 10;
+const LABEL_GAP = 8;
+const LABEL_WIDTH = 200;
 
-// Colour is secondary — branch lane (x position) and node shape (merge vs.
+// Colour is secondary: branch lane (x position) and node shape (merge vs.
 // regular commit) are what actually carry the meaning, so this palette only
 // needs to be legible, not uniquely decodable on its own.
 const COLOURS = ["#4e9a06", "#3465a4", "#c4a000", "#ce5c00", "#75507b", "#a40000", "#06989a"];
@@ -20,6 +22,9 @@ function px(p: Point) {
 export interface RenderedCommitInfo {
   index: number;
   summary: string;
+  /** Text shown inline next to the node: the PR title for a recognised
+   * merge commit, the commit summary otherwise. */
+  label: string;
   author: string;
   date: number;
   refs: string[];
@@ -31,7 +36,8 @@ export interface RenderedCommitInfo {
  */
 export function renderGraph(container: HTMLElement, layout: Layout, info: RenderedCommitInfo[]): void {
   const height = layout.vertices.length * GRID_Y + OFFSET_Y;
-  const width = layout.width * GRID_X + OFFSET_X * 2;
+  const labelStartX = layout.width * GRID_X + OFFSET_X + LABEL_GAP;
+  const width = labelStartX + LABEL_WIDTH;
 
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("width", String(width));
@@ -82,14 +88,28 @@ export function renderGraph(container: HTMLElement, layout: Layout, info: Render
       const title = document.createElementNS(SVG_NS, "title");
       const when = new Date(meta.date * 1000).toLocaleString();
       const refPart = meta.refs.length > 0 ? ` [${meta.refs.join(", ")}]` : "";
-      title.textContent = `${meta.summary}${refPart}\n${meta.author} — ${when}`;
+      title.textContent = `${meta.summary}${refPart}\n${meta.author}, ${when}`;
       node.appendChild(title);
     }
     svg.appendChild(node);
 
+    if (meta) {
+      const foreignObject = document.createElementNS(SVG_NS, "foreignObject");
+      foreignObject.setAttribute("x", String(labelStartX));
+      foreignObject.setAttribute("y", String(point.y - GRID_Y / 2));
+      foreignObject.setAttribute("width", String(LABEL_WIDTH));
+      foreignObject.setAttribute("height", String(GRID_Y));
+
+      const label = document.createElement("div");
+      label.className = "git-graph-label";
+      label.textContent = meta.label;
+      foreignObject.appendChild(label);
+      svg.appendChild(foreignObject);
+    }
+
     if (vertex.hasTruncatedParent) {
       // History is known to continue but isn't in the fetched set (shallow
-      // clone boundary) — draw a short dashed stub with an open marker
+      // clone boundary), draw a short dashed stub with an open marker
       // rather than a line that could be misread as connecting to a real commit.
       const stub = document.createElementNS(SVG_NS, "line");
       stub.setAttribute("x1", String(point.x));

@@ -12,10 +12,16 @@ pub struct GraphCommit {
     /// Parent commit ids that are present in this graph's commit set.
     parents: Vec<String>,
     /// Parent ids referenced by this commit that were NOT walked (shallow
-    /// clone boundary, or truncated by `limit`) — rendered as a break, not
+    /// clone boundary, or truncated by `limit`), rendered as a break, not
     /// a continuous line, so history isn't implied where none is known.
     truncated_parents: Vec<String>,
     refs: Vec<String>,
+    /// Present only for a recognised "Merge pull request #N from <branch>"
+    /// commit (GitHub's standard regular-merge shape): the PR number and
+    /// title, pulled from the message body rather than a GitHub API call,
+    /// since the data's already in local history.
+    pr_number: Option<u64>,
+    pr_title: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -75,6 +81,9 @@ pub fn git_log(path: String, limit: usize) -> Result<GraphData, String> {
             }
         }
 
+        let message = commit.message().unwrap_or("").to_string();
+        let pr = parse_merge_pr(&message);
+
         commits.push(GraphCommit {
             id: oid.to_string(),
             summary: commit.summary().ok().flatten().unwrap_or("").to_string(),
@@ -83,6 +92,8 @@ pub fn git_log(path: String, limit: usize) -> Result<GraphData, String> {
             parents,
             truncated_parents,
             refs: refs_by_oid.remove(oid).unwrap_or_default(),
+            pr_number: pr.as_ref().map(|(n, _)| *n),
+            pr_title: pr.map(|(_, t)| t),
         });
     }
 
@@ -105,6 +116,28 @@ pub fn git_remote_owner_repo(path: String) -> Result<Option<(String, String)>, S
     };
 
     Ok(parse_github_owner_repo(url))
+}
+
+/// Recognises GitHub's standard regular-merge commit message shape:
+/// "Merge pull request #N from <branch>" as the first line, with the PR
+/// title as the first non-empty line after it. Returns `None` for anything
+/// else (a non-merge commit, a squash/rebase merge, or a hand-written merge
+/// message): this is deliberately narrow rather than guessing.
+fn parse_merge_pr(message: &str) -> Option<(u64, String)> {
+    let mut lines = message.lines();
+    let first = lines.next()?.trim();
+    let rest = first.strip_prefix("Merge pull request #")?;
+    let number_str = rest.split_whitespace().next()?;
+    let number: u64 = number_str.parse().ok()?;
+    if !rest.starts_with(&format!("{number} from ")) {
+        return None;
+    }
+
+    let title = lines.find(|l| !l.trim().is_empty())?.trim().to_string();
+    if title.is_empty() {
+        return None;
+    }
+    Some((number, title))
 }
 
 /// Parses `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git`
@@ -164,6 +197,32 @@ mod tests {
     #[test]
     fn rejects_non_github_url() {
         assert_eq!(parse_github_owner_repo("https://gitlab.com/rodlunt/sidecar.git"), None);
+    }
+
+    #[test]
+    fn parses_real_github_merge_message() {
+        let message = "Merge pull request #4 from rodlunt/feat/git-graph-panel\n\nfeat: add git commit graph panel\n";
+        assert_eq!(
+            parse_merge_pr(message),
+            Some((4, "feat: add git commit graph panel".to_string()))
+        );
+    }
+
+    #[test]
+    fn rejects_non_merge_commit_message() {
+        assert_eq!(parse_merge_pr("fix(ci): declare pnpm version via packageManager field"), None);
+    }
+
+    #[test]
+    fn rejects_hand_written_merge_message() {
+        // A merge commit that isn't GitHub's standard regular-merge shape
+        // (e.g. a manual `git merge` locally) must not be misparsed as a PR.
+        assert_eq!(parse_merge_pr("Merge branch 'main' into feature-x"), None);
+    }
+
+    #[test]
+    fn rejects_merge_with_no_title_line() {
+        assert_eq!(parse_merge_pr("Merge pull request #4 from rodlunt/feat/x\n"), None);
     }
 
     fn commit(
