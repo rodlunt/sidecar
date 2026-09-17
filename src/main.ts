@@ -4,6 +4,7 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { FileTree } from "./file-tree";
+import { GitGraph } from "./git-graph";
 
 const container = document.getElementById("terminal")!;
 
@@ -12,12 +13,37 @@ const fileTree = new FileTree(
   document.getElementById("root-label")!,
 );
 
+const gitGraph = new GitGraph(
+  document.getElementById("git-graph-container")!,
+  document.getElementById("git-graph-status")!,
+);
+
 document.getElementById("open-folder-btn")!.addEventListener("click", async () => {
   const { open } = await import("@tauri-apps/plugin-dialog");
   const picked = await open({ directory: true });
   if (typeof picked === "string") {
     await fileTree.open(picked);
+    await gitGraph.open(picked);
   }
+});
+
+const tabButtons = document.querySelectorAll<HTMLButtonElement>(".sidebar-tab");
+const panels: Record<string, HTMLElement> = {
+  files: document.getElementById("file-tree")!,
+  git: document.getElementById("git-graph-panel")!,
+};
+
+tabButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const tab = btn.dataset.tab!;
+    tabButtons.forEach((b) => b.classList.toggle("active", b === btn));
+    for (const [name, panel] of Object.entries(panels)) {
+      panel.hidden = name !== tab;
+    }
+    if (tab === "git") {
+      gitGraph.refresh();
+    }
+  });
 });
 
 const term = new Terminal({

@@ -55,10 +55,70 @@ body {
   background: #3d3d3d;
 }
 
-#file-tree {
+#sidebar-tabs {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid #2d2d2d;
+}
+
+.sidebar-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #888;
+  padding: 6px 0;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.sidebar-tab:hover {
+  color: #ccc;
+}
+
+.sidebar-tab.active {
+  color: #e0e0e0;
+  border-bottom-color: #3465a4;
+}
+
+.sidebar-panel {
   overflow-y: auto;
   flex: 1;
   padding: 4px 0;
+}
+
+.sidebar-panel[hidden] {
+  display: none;
+}
+
+#git-graph-status {
+  padding: 4px 10px;
+  color: #888;
+  font-size: 11px;
+}
+
+#git-graph-container {
+  overflow-x: auto;
+}
+
+.git-graph-line {
+  fill: none;
+  stroke-width: 1.5px;
+}
+
+.git-graph-vertex {
+  stroke: #181818;
+  stroke-width: 1px;
+}
+
+.git-graph-gap-stub {
+  stroke-width: 1.5px;
+  stroke-dasharray: 2px;
+}
+
+.git-graph-gap-marker {
+  fill: #181818;
+  stroke-width: 1.5px;
 }
 
 .tree-node {

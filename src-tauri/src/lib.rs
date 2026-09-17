@@ -1,4 +1,5 @@
 mod fs;
+mod git;
 mod pty;
 
 use fs::WatcherState;
@@ -18,6 +19,8 @@ pub fn run() {
             pty::pty_kill,
             fs::read_dir,
             fs::watch_root,
+            git::git_log,
+            git::git_remote_owner_repo,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
