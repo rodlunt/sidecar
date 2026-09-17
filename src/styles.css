@@ -121,6 +121,121 @@ body {
   stroke-width: 1.5px;
 }
 
+.issues-signin-btn {
+  display: block;
+  margin: 10px;
+  background: #2d2d2d;
+  color: #ccc;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.issues-signin-btn:hover {
+  background: #3d3d3d;
+}
+
+.issues-status {
+  padding: 8px 10px;
+  color: #888;
+  font-size: 12px;
+}
+
+.issues-device-code {
+  margin: 4px 10px;
+  padding: 6px 10px;
+  background: #2d2d2d;
+  border-radius: 4px;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.issues-device-link {
+  display: block;
+  margin: 8px 10px;
+  color: #3465a4;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.issues-device-link:hover {
+  text-decoration: underline;
+}
+
+.issues-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid #2d2d2d;
+}
+
+.issues-header {
+  color: #888;
+  font-size: 11px;
+}
+
+.issues-signout-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.issues-signout-btn:hover {
+  color: #ccc;
+}
+
+.issues-list {
+  overflow-y: auto;
+}
+
+.issues-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #232323;
+  text-decoration: none;
+  color: inherit;
+}
+
+.issues-row:hover {
+  background-color: #2a2a2a;
+}
+
+.issues-row-number {
+  color: #666;
+  font-size: 11px;
+}
+
+.issues-row-title {
+  font-size: 12px;
+  color: #e0e0e0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.issues-row-meta {
+  font-size: 11px;
+  color: #888;
+}
+
+.issues-row-meta-older {
+  color: #c4a000;
+}
+
+.issues-row-meta-newer {
+  color: #4e9a06;
+}
+
 .tree-node {
   user-select: none;
 }

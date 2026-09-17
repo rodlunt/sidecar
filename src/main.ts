@@ -5,6 +5,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { FileTree } from "./file-tree";
 import { GitGraph } from "./git-graph";
+import { IssuesPanel } from "./issues-panel";
 
 const container = document.getElementById("terminal")!;
 
@@ -18,12 +19,15 @@ const gitGraph = new GitGraph(
   document.getElementById("git-graph-status")!,
 );
 
+const issuesPanel = new IssuesPanel(document.getElementById("issues-panel")!);
+
 document.getElementById("open-folder-btn")!.addEventListener("click", async () => {
   const { open } = await import("@tauri-apps/plugin-dialog");
   const picked = await open({ directory: true });
   if (typeof picked === "string") {
     await fileTree.open(picked);
     await gitGraph.open(picked);
+    await issuesPanel.open(picked);
   }
 });
 
@@ -31,6 +35,7 @@ const tabButtons = document.querySelectorAll<HTMLButtonElement>(".sidebar-tab");
 const panels: Record<string, HTMLElement> = {
   files: document.getElementById("file-tree")!,
   git: document.getElementById("git-graph-panel")!,
+  issues: document.getElementById("issues-panel")!,
 };
 
 tabButtons.forEach((btn) => {
@@ -42,6 +47,8 @@ tabButtons.forEach((btn) => {
     }
     if (tab === "git") {
       gitGraph.refresh();
+    } else if (tab === "issues") {
+      issuesPanel.refresh();
     }
   });
 });
