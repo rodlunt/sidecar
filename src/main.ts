@@ -39,11 +39,12 @@ new Accordion(document.getElementById("sidebar-accordion")!, (id) => {
 
 const term = new Terminal({
   cursorBlink: true,
-  fontFamily: "Menlo, Consolas, monospace",
+  fontFamily: "'IBM Plex Mono', Menlo, Consolas, monospace",
   fontSize: 14,
   theme: {
-    background: "#1e1e1e",
-    foreground: "#e0e0e0",
+    background: "#171a1f",
+    foreground: "#e2e4e8",
+    cursor: "#4a90d9",
   },
 });
 

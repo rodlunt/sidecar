@@ -76,6 +76,8 @@ export function renderGraph(container: HTMLElement, layout: Layout, info: Render
       node.setAttribute("y", String(point.y - size / 2));
       node.setAttribute("width", String(size));
       node.setAttribute("height", String(size));
+      node.setAttribute("rx", "2");
+      node.setAttribute("ry", "2");
     } else {
       node.setAttribute("cx", String(point.x));
       node.setAttribute("cy", String(point.y));
