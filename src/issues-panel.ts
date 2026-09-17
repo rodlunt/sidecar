@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { showIssueModal } from "./issue-modal";
 
 type RelativeAge = "older_than_usual" | "newer_than_usual" | "typical";
 
@@ -171,11 +172,11 @@ export class IssuesPanel {
   }
 
   private renderIssueRow(issue: IssueSummary): HTMLElement {
-    const row = document.createElement("a");
+    const row = document.createElement("button");
     row.className = "issues-row";
-    row.href = issue.html_url;
-    row.target = "_blank";
-    row.rel = "noreferrer";
+    row.addEventListener("click", () => {
+      if (this.rootPath) showIssueModal(this.rootPath, issue);
+    });
 
     const number = document.createElement("span");
     number.className = "issues-row-number";

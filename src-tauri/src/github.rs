@@ -314,6 +314,54 @@ pub async fn list_issues(path: String) -> Result<IssuesSummary, String> {
     })
 }
 
+#[derive(Serialize)]
+pub struct IssueDetail {
+    number: u64,
+    title: String,
+    html_url: String,
+    /// Raw markdown, shown as preformatted text on the frontend rather than
+    /// rendered to HTML: avoids a markdown-parser dependency and the
+    /// sanitisation question rendering third-party markdown would raise,
+    /// for a "read the description" need plain text already satisfies.
+    body: Option<String>,
+    author: String,
+    created_at: i64,
+    updated_at: i64,
+    comments: u32,
+    labels: Vec<String>,
+}
+
+#[tauri::command]
+pub async fn get_issue_detail(path: String, number: u64) -> Result<IssueDetail, String> {
+    let tokens = valid_tokens().await?;
+
+    let (owner, repo) = git_remote_owner_repo(path)?
+        .ok_or_else(|| "no GitHub remote found for this folder".to_string())?;
+
+    let client = Octocrab::builder()
+        .user_access_token(tokens.access_token)
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let issue = client
+        .issues(&owner, &repo)
+        .get(number)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(IssueDetail {
+        number: issue.number,
+        title: issue.title,
+        html_url: issue.html_url.to_string(),
+        body: issue.body,
+        author: issue.user.login,
+        created_at: issue.created_at.timestamp(),
+        updated_at: issue.updated_at.timestamp(),
+        comments: issue.comments,
+        labels: issue.labels.into_iter().map(|l| l.name).collect(),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

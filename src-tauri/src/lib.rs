@@ -29,6 +29,7 @@ pub fn run() {
             github::github_device_login_start,
             github::github_device_login_poll,
             github::list_issues,
+            github::get_issue_detail,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
