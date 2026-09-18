@@ -1,6 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 
-type FileContent = { kind: "text"; content: string } | { kind: "binary" };
+type FileContent =
+  | { kind: "text"; content: string }
+  | { kind: "binary" }
+  | { kind: "too_large"; size: number };
 
 // A single panel docked above the terminal that shows the contents of
 // whichever file was last clicked in the tree. It never stacks: opening a
@@ -68,6 +71,15 @@ export class PreviewPanel {
       const message = document.createElement("div");
       message.className = "preview-message";
       message.textContent = "Binary file, not previewed.";
+      this.body.append(message);
+      return;
+    }
+
+    if (result.kind === "too_large") {
+      const message = document.createElement("div");
+      message.className = "preview-message";
+      const mb = (result.size / (1024 * 1024)).toFixed(1);
+      message.textContent = `File is too large to preview (${mb} MB).`;
       this.body.append(message);
       return;
     }
