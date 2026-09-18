@@ -21,6 +21,7 @@ pub fn run() {
             pty::pty_resize,
             pty::pty_kill,
             fs::read_dir,
+            fs::read_file,
             fs::watch_root,
             git::git_log,
             git::git_remote_owner_repo,
