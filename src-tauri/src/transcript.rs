@@ -11,6 +11,57 @@ use tauri::{AppHandle, Manager, State};
 const SETTINGS_FILE: &str = "settings.json";
 const TRANSCRIPTS_DIR: &str = "transcripts";
 
+/// Creates `path` (and any missing parents) with owner-only permissions on
+/// Unix. Both the settings file and the transcript directory can end up
+/// holding sensitive content (a session's typed commands, or, later,
+/// anything else settings.json grows to hold), so they should never inherit
+/// a permissive umask. Windows ACLs already scope the app-data directory to
+/// the current user, so there's nothing to add there.
+#[cfg(unix)]
+fn create_private_dir_all(path: &Path) -> std::io::Result<()> {
+    use std::os::unix::fs::DirBuilderExt;
+    std::fs::DirBuilder::new()
+        .recursive(true)
+        .mode(0o700)
+        .create(path)
+}
+
+#[cfg(not(unix))]
+fn create_private_dir_all(path: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(path)
+}
+
+/// Opens `path` for appending, creating it with `0600` on Unix if it
+/// doesn't exist yet. Set at creation time via `OpenOptions::mode` rather
+/// than a `chmod` afterwards, since a post-creation chmod leaves a window
+/// where the file briefly exists at the umask's default (commonly `0644`,
+/// world-readable) before being locked down.
+fn open_private_append(path: &Path) -> std::io::Result<std::fs::File> {
+    let mut options = OpenOptions::new();
+    options.create(true).append(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    options.open(path)
+}
+
+/// Writes `contents` to `path`, creating it with `0600` on Unix. Used for
+/// `settings.json` for the same reason as `open_private_append`: `mode()`
+/// on the creating `OpenOptions` call, not a `chmod` afterwards.
+fn write_private(path: &Path, contents: &str) -> std::io::Result<()> {
+    let mut options = OpenOptions::new();
+    options.create(true).write(true).truncate(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(path)?;
+    file.write_all(contents.as_bytes())
+}
+
 /// Shared, mutable "should we be writing a transcript right now" flag.
 ///
 /// It is an `Arc<AtomicBool>` rather than a plain bool behind a `Mutex` so a
@@ -76,10 +127,10 @@ fn load_settings(app_data_dir: &Path) -> Settings {
 }
 
 fn save_settings(app_data_dir: &Path, settings: &Settings) -> std::io::Result<()> {
-    std::fs::create_dir_all(app_data_dir)?;
+    create_private_dir_all(app_data_dir)?;
     let json = serde_json::to_string_pretty(settings)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-    std::fs::write(settings_path(app_data_dir), json)
+    write_private(&settings_path(app_data_dir), &json)
 }
 
 /// Reads the persisted transcript-enabled setting (defaulting to `true`).
@@ -119,14 +170,9 @@ impl TranscriptWriter {
     pub fn write(&mut self, bytes: &[u8]) -> std::io::Result<()> {
         if self.file.is_none() {
             if let Some(parent) = self.path.parent() {
-                std::fs::create_dir_all(parent)?;
+                create_private_dir_all(parent)?;
             }
-            self.file = Some(
-                OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(&self.path)?,
-            );
+            self.file = Some(open_private_append(&self.path)?);
         }
         if let Some(file) = self.file.as_mut() {
             file.write_all(bytes)?;
@@ -294,6 +340,46 @@ mod tests {
 
         assert_ne!(a, b, "relaunching should not reuse the previous filename");
         assert_eq!(a.parent().unwrap(), dir.join(TRANSCRIPTS_DIR));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn transcript_file_and_dir_are_created_owner_only() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = unique_temp_dir("perms-transcript");
+        let path = dir.join("nested").join("session.log");
+        let mut writer = TranscriptWriter::new(path.clone());
+        let enabled = AtomicBool::new(true);
+
+        maybe_write(&mut writer, &enabled, b"secret-looking output");
+
+        let file_mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(file_mode, 0o600, "transcript file should be owner read/write only");
+
+        let created_dir = path.parent().unwrap();
+        let dir_mode = std::fs::metadata(created_dir).unwrap().permissions().mode() & 0o777;
+        assert_eq!(dir_mode, 0o700, "transcript directory should be owner-only");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn settings_file_is_created_owner_only() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = unique_temp_dir("perms-settings");
+        save_settings(&dir, &Settings { transcript_enabled: false }).unwrap();
+
+        let mode = std::fs::metadata(settings_path(&dir))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(mode, 0o600, "settings.json should be owner read/write only");
 
         let _ = std::fs::remove_dir_all(&dir);
     }
