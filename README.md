@@ -10,10 +10,10 @@ pnpm install
 pnpm tauri dev
 ```
 
-Implemented: a pty-backed terminal pane, a live-updating file tree, a git commit graph with
-inline PR labels, and a GitHub Issues panel (device-flow sign-in, keychain token storage).
-Sidebar sections are an independent, resizable, reorderable accordion. Chat (Phase 2) isn't
-built yet.
+Implemented: a pty-backed terminal pane that saves its transcript to disk by default (toggle
+next to the terminal), a live-updating file tree, a git commit graph with inline PR labels, and
+a GitHub Issues panel (device-flow sign-in, keychain token storage). Sidebar sections are an
+independent, resizable, reorderable accordion. Chat (Phase 2) isn't built yet.
 
 ## Stack
 

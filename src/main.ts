@@ -57,6 +57,25 @@ async function spawnShell() {
   await invoke("pty_spawn", { cols: term.cols, rows: term.rows });
 }
 
+const transcriptToggle = document.getElementById("transcript-toggle") as HTMLInputElement;
+
+invoke<boolean>("get_transcript_enabled")
+  .then((enabled) => {
+    transcriptToggle.checked = enabled;
+  })
+  .catch((err) => {
+    console.error("get_transcript_enabled failed", err);
+  });
+
+transcriptToggle.addEventListener("change", () => {
+  const enabled = transcriptToggle.checked;
+  invoke("set_transcript_enabled", { enabled }).catch((err) => {
+    console.error("set_transcript_enabled failed", err);
+    // Don't let the checkbox claim a state the backend never persisted.
+    transcriptToggle.checked = !enabled;
+  });
+});
+
 await listen<string>("pty-output", (event) => {
   term.write(event.payload);
 });
