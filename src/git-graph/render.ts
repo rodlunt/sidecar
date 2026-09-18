@@ -19,6 +19,42 @@ function px(p: Point) {
   return { x: p.x * GRID_X + OFFSET_X, y: p.y * GRID_Y + OFFSET_Y };
 }
 
+/**
+ * Number of lanes actually in use at each row (commit index), rather than
+ * the single global maximum across the whole rendered range.
+ *
+ * A branch line drawn between two vertices occupies its lane for every row
+ * between them, not just the two rows it starts and ends on (the SVG path
+ * is a continuous curve through that span), so a row counts as "busy" if
+ * any line passes through it, whether or not that row has a vertex sitting
+ * in that lane. This is what lets a quiet stretch either side of a
+ * multi-branch spike stay quiet: only the rows actually spanned by the
+ * spike's extra lines see the wider count.
+ *
+ * Returned value at index `y` is (highest lane index used at row `y`) + 1,
+ * matching the convention `layout.width` already uses for the whole graph.
+ */
+export function computeRowLaneWidths(layout: Layout): number[] {
+  const widths = new Array<number>(layout.vertices.length).fill(1);
+
+  for (const vertex of layout.vertices) {
+    widths[vertex.id] = Math.max(widths[vertex.id], vertex.x + 1);
+  }
+
+  for (const branch of layout.branches) {
+    for (const line of branch.getLines()) {
+      const lo = Math.min(line.p1.y, line.p2.y);
+      const hi = Math.max(line.p1.y, line.p2.y);
+      const laneWidth = Math.max(line.p1.x, line.p2.x) + 1;
+      for (let y = lo; y <= hi; y++) {
+        if (laneWidth > widths[y]) widths[y] = laneWidth;
+      }
+    }
+  }
+
+  return widths;
+}
+
 export interface RenderedCommitInfo {
   index: number;
   summary: string;
@@ -36,8 +72,10 @@ export interface RenderedCommitInfo {
  */
 export function renderGraph(container: HTMLElement, layout: Layout, info: RenderedCommitInfo[]): void {
   const height = layout.vertices.length * GRID_Y + OFFSET_Y;
-  const labelStartX = layout.width * GRID_X + OFFSET_X + LABEL_GAP;
-  const width = labelStartX + LABEL_WIDTH;
+  const rowLaneWidths = computeRowLaneWidths(layout);
+  const maxLaneWidth = rowLaneWidths.reduce((max, w) => Math.max(max, w), 1);
+  const labelStartXFor = (row: number) => rowLaneWidths[row] * GRID_X + OFFSET_X + LABEL_GAP;
+  const width = maxLaneWidth * GRID_X + OFFSET_X + LABEL_GAP + LABEL_WIDTH;
 
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("width", String(width));
@@ -97,7 +135,7 @@ export function renderGraph(container: HTMLElement, layout: Layout, info: Render
 
     if (meta) {
       const foreignObject = document.createElementNS(SVG_NS, "foreignObject");
-      foreignObject.setAttribute("x", String(labelStartX));
+      foreignObject.setAttribute("x", String(labelStartXFor(vertex.id)));
       foreignObject.setAttribute("y", String(point.y - GRID_Y / 2));
       foreignObject.setAttribute("width", String(LABEL_WIDTH));
       foreignObject.setAttribute("height", String(GRID_Y));
