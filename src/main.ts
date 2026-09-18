@@ -29,6 +29,7 @@ document.getElementById("open-folder-btn")!.addEventListener("click", async () =
     await fileTree.open(picked);
     await gitGraph.open(picked);
     await issuesPanel.open(picked);
+    await openRepoInTerminal(picked);
   }
 });
 
@@ -55,6 +56,24 @@ fitAddon.fit();
 
 async function spawnShell() {
   await invoke("pty_spawn", { cols: term.cols, rows: term.rows });
+}
+
+// Restarts the shell rooted at the opened folder, so the terminal (and
+// anything launched inside it, such as an LLM CLI) reports the repo actually
+// open in the app rather than wherever sidecar itself started from. The
+// printed line is the "visible/announced cwd" this replaces silent
+// switching with; the old session's own exit is suppressed on the Rust side
+// (see pty.rs's `is_current`) so it never shows a confusing stray
+// "[process exited]" underneath.
+async function openRepoInTerminal(path: string) {
+  // Strip C0/C1/DEL control bytes before writing an externally-influenced
+  // path into the terminal, so a folder name can't smuggle escape sequences
+  // into xterm.js. The real (unsanitised) path still goes to pty_restart.
+  const safePath = path.replace(/[\x00-\x1f\x7f-\x9f]/g, "?");
+  term.write(`\r\n\x1b[2m[sidecar] repo: ${safePath}\x1b[0m\r\n`);
+  await invoke("pty_restart", { path, cols: term.cols, rows: term.rows }).catch((err) => {
+    console.error("pty_restart failed", err);
+  });
 }
 
 await listen<string>("pty-output", (event) => {
