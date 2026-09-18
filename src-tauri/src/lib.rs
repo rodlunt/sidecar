@@ -17,6 +17,7 @@ pub fn run() {
         .manage(GithubAuthState::default())
         .invoke_handler(tauri::generate_handler![
             pty::pty_spawn,
+            pty::pty_restart,
             pty::pty_write,
             pty::pty_resize,
             pty::pty_kill,
