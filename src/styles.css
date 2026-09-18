@@ -144,6 +144,26 @@ select {
   background: var(--surface-hover);
 }
 
+/* Sidebar width is set inline by src/sidebar-resize.ts (a stored width from
+   a previous drag, or the 260px default): inline style wins over the width
+   above, same non-cascade-fight reasoning as the accordion's flex-basis. */
+
+#sidebar-resize-handle {
+  flex-shrink: 0;
+  width: 4px;
+  margin-left: -2px;
+  margin-right: -2px;
+  position: relative;
+  z-index: 1;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+#sidebar-resize-handle:hover,
+#sidebar-resize-handle.dragging {
+  background-color: var(--accent);
+}
+
 #sidebar-accordion {
   display: flex;
   flex-direction: column;

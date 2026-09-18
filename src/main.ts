@@ -7,6 +7,7 @@ import { FileTree } from "./file-tree";
 import { GitGraph } from "./git-graph";
 import { IssuesPanel } from "./issues-panel";
 import { Accordion } from "./accordion";
+import { initSidebarResize } from "./sidebar-resize";
 
 const container = document.getElementById("terminal")!;
 
@@ -72,7 +73,7 @@ term.onData((data) => {
 });
 
 let resizeTimer: ReturnType<typeof setTimeout> | undefined;
-window.addEventListener("resize", () => {
+function scheduleTerminalRefit() {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     fitAddon.fit();
@@ -80,7 +81,15 @@ window.addEventListener("resize", () => {
       console.error("pty_resize failed", err);
     });
   }, 100);
-});
+}
+
+window.addEventListener("resize", scheduleTerminalRefit);
+
+initSidebarResize(
+  document.getElementById("sidebar")!,
+  document.getElementById("sidebar-resize-handle")!,
+  scheduleTerminalRefit,
+);
 
 await spawnShell();
 term.focus();
