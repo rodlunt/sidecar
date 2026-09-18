@@ -7,12 +7,22 @@ import { FileTree } from "./file-tree";
 import { GitGraph } from "./git-graph";
 import { IssuesPanel } from "./issues-panel";
 import { Accordion } from "./accordion";
+import { PreviewPanel } from "./preview-panel";
 
 const container = document.getElementById("terminal")!;
+
+const previewPanel = new PreviewPanel(
+  document.getElementById("preview-panel")!,
+  document.getElementById("preview-path")!,
+  document.getElementById("preview-body")!,
+  document.getElementById("preview-close-btn")! as HTMLButtonElement,
+  () => resizeTerminal(),
+);
 
 const fileTree = new FileTree(
   document.getElementById("file-tree")!,
   document.getElementById("root-label")!,
+  (path) => previewPanel.open(path),
 );
 
 const gitGraph = new GitGraph(
@@ -71,15 +81,17 @@ term.onData((data) => {
   });
 });
 
+function resizeTerminal() {
+  fitAddon.fit();
+  invoke("pty_resize", { cols: term.cols, rows: term.rows }).catch((err) => {
+    console.error("pty_resize failed", err);
+  });
+}
+
 let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    fitAddon.fit();
-    invoke("pty_resize", { cols: term.cols, rows: term.rows }).catch((err) => {
-      console.error("pty_resize failed", err);
-    });
-  }, 100);
+  resizeTimer = setTimeout(resizeTerminal, 100);
 });
 
 await spawnShell();

@@ -16,12 +16,18 @@ interface NodeState {
 export class FileTree {
   private container: HTMLElement;
   private rootLabel: HTMLElement;
+  private onFileClick: (path: string) => void;
   private rootPath: string | null = null;
   private roots: NodeState[] = [];
 
-  constructor(container: HTMLElement, rootLabel: HTMLElement) {
+  constructor(
+    container: HTMLElement,
+    rootLabel: HTMLElement,
+    onFileClick: (path: string) => void,
+  ) {
     this.container = container;
     this.rootLabel = rootLabel;
+    this.onFileClick = onFileClick;
     listen("fs-changed", () => this.refresh());
   }
 
@@ -87,6 +93,8 @@ export class FileTree {
         childContainer.append(...node.children.map((c) => this.renderNode(c)));
         wrapper.append(childContainer);
       }
+    } else {
+      row.addEventListener("click", () => this.onFileClick(node.entry.path));
     }
 
     return wrapper;

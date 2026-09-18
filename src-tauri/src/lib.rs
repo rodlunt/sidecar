@@ -3,7 +3,7 @@ mod git;
 mod github;
 mod pty;
 
-use fs::WatcherState;
+use fs::{WatcherState, WorkspaceRootState};
 use github::GithubAuthState;
 use pty::PtyState;
 
@@ -14,6 +14,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(PtyState::default())
         .manage(WatcherState::default())
+        .manage(WorkspaceRootState::default())
         .manage(GithubAuthState::default())
         .invoke_handler(tauri::generate_handler![
             pty::pty_spawn,
@@ -21,6 +22,7 @@ pub fn run() {
             pty::pty_resize,
             pty::pty_kill,
             fs::read_dir,
+            fs::read_file,
             fs::watch_root,
             git::git_log,
             git::git_remote_owner_repo,
